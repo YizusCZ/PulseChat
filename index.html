@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PulseChat — Chat en tiempo real con radio integrada, menciones, y subida de archivos. Estética retro cassette.">
+    <title>PulseChat — Retro Cassette Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="iconos/cassette.png">
+</head>
+<body>
+    <!-- Fondo ambiental -->
+    <div class="ambient-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="scan-lines"></div>
+    </div>
+
+    <!-- Estado de conexión -->
+    <div id="connection-status" class="connection-status"></div>
+    <!-- Notificaciones flotantes -->
+    <div id="toast-container" class="toast-container"></div>
+    <!-- Visor de imágenes -->
+    <div id="lightbox" class="lightbox"><img id="lightbox-img" src="" alt=""></div>
+
+    <!-- Inputs ocultos -->
+    <input type="file" id="file-input-image" accept="image/jpeg,image/png,image/gif,image/webp">
+    <input type="file" id="file-input-video" accept="video/mp4,video/webm">
+
+    <!-- ═══════ PANTALLA DE AUTENTICACIÓN ═══════ -->
+    <div id="auth-screen">
+        <div class="auth-container">
+            <!-- Win95 Title Bar -->
+            <div class="auth-title-bar">
+                <div class="auth-title-text">PulseChat - Inicio de sesión</div>
+            </div>
+
+            <!-- Dialog Content -->
+            <div class="auth-dialog-content">
+                <div class="auth-logo-area">
+                    <img src="iconos/cassette.png" alt="Logo" style="height: 32px; margin-right: 12px;">
+                    <div>
+                        <h1 class="auth-brand">PulseChat</h1>
+                        <p class="auth-tagline">Retro Cassette Messenger</p>
+                    </div>
+                </div>
+
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login" id="tab-login">Ingresar</button>
+                    <button class="auth-tab" data-tab="register" id="tab-register">Registro</button>
+                </div>
+
+                <form class="auth-form" id="auth-form">
+                    <input type="text" class="auth-input" id="auth-username" placeholder="Nombre de usuario" maxlength="30" autocomplete="off" required>
+                    <input type="password" class="auth-input" id="auth-password" placeholder="Contraseña" minlength="4" required>
+                    <div class="auth-error" id="auth-error"></div>
+                    <button type="submit" class="auth-btn" id="auth-btn">Ingresar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════ APLICACIÓN PRINCIPAL ═══════ -->
+    <div id="app">
+        <!-- Barra lateral -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="iconos/cassette.png" alt="Logo" style="height: 20px;">
+                </div>
+                <span class="sidebar-brand">Pulse<span class="sidebar-brand-accent">Chat</span></span>
+            </div>
+            <div class="sidebar-section-title">Salas de Chat</div>
+            <div class="rooms-list" id="rooms-list"></div>
+            <div class="sidebar-footer">
+                <div class="user-avatar avatar-color-0" id="sidebar-avatar"></div>
+                <div class="user-info-text">
+                    <div class="user-display-name" id="sidebar-username"></div>
+                    <div class="user-status">EN LÍNEA</div>
+                </div>
+                <button class="logout-btn" id="logout-btn" title="Cerrar sesión">
+                    <img src="iconos/salir.png" alt="Salir">
+                </button>
+            </div>
+        </aside>
+
+        <!-- Área de chat -->
+        <main class="chat-area">
+            <!-- Título de ventana estilo Win95 -->
+            <div class="chat-title-bar">
+                <div class="chat-title-text" id="chat-room-title">General</div>
+                <div class="chat-title-controls">
+                    <button class="win95-title-btn" id="win-btn-prev" title="Canal Anterior">◄</button>
+                    <button class="win95-title-btn" id="win-btn-next" title="Canal Siguiente">►</button>
+                    <button class="win95-title-btn" id="win-btn-close" title="Ir al fondo de los mensajes">▼</button>
+                </div>
+            </div>
+            
+            <!-- Barra de menú gris -->
+            <div class="chat-menu-bar">
+                <div class="chat-menu-left">
+                    <button class="mobile-toggle" id="mobile-toggle">Menú</button>
+                    <span class="chat-room-desc" id="chat-room-desc">Chat general para todos</span>
+                </div>
+                <div class="chat-menu-right">
+                    <button class="mentions-btn" id="mentions-btn" title="Menciones">
+                        @ Menciones
+                        <span class="badge" id="mentions-badge" style="display:none">0</span>
+                    </button>
+                    <div class="online-indicator">
+                        <span class="online-dot"></span>
+                        <span id="online-count">0 en línea</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de menciones -->
+            <div class="mentions-panel" id="mentions-panel">
+                <div class="mentions-panel-header">
+                    <span>Menciones</span>
+                    <button id="mentions-mark-all" title="Marcar todas como leídas">Leídas</button>
+                    <button id="mentions-close">Cerrar</button>
+                </div>
+                <div class="mentions-list" id="mentions-list"></div>
+            </div>
+
+            <!-- Panel de Emojis Retro -->
+            <div class="emoji-panel" id="emoji-panel">
+                <!-- Se poblará dinámicamente en app.js -->
+            </div>
+
+            <div class="messages-container" id="messages-container"></div>
+            <div class="new-msg-indicator" id="new-msg-indicator">Nuevos mensajes</div>
+
+            <div class="chat-input-area">
+                <!-- Vista previa de archivos -->
+                <div class="upload-preview" id="upload-preview">
+                    <img id="upload-preview-img" src="" alt="" style="display:none">
+                    <video id="upload-preview-vid" src="" style="display:none" muted></video>
+                    <div class="upload-info" id="upload-info"></div>
+                    <button class="upload-remove" id="upload-remove">Quitar</button>
+                </div>
+                <!-- Menú desplegable de menciones -->
+                <div class="mention-dropdown" id="mention-dropdown"></div>
+                <div class="input-container">
+                    <div class="input-actions">
+                        <button class="input-action-btn" id="btn-upload-image" title="Subir imagen">
+                            <img src="iconos/imagen.png" alt="Img">
+                        </button>
+                        <button class="input-action-btn" id="btn-upload-video" title="Subir video">
+                            <img src="iconos/video.png" alt="Vid">
+                        </button>
+                        <button class="input-action-btn emoji-picker-btn" id="btn-emoji-picker" title="Emojis Retro">
+                            <img src="iconos/emojis retro/Smiley.ico" alt="Emoji">
+                        </button>
+                    </div>
+                    <div class="message-input-wrapper">
+                        <textarea id="message-input" class="message-input" placeholder="Escribe un mensaje... usa @usuario para mencionar" rows="1" maxlength="2000"></textarea>
+                    </div>
+                    <button class="send-btn" id="send-btn" title="Enviar" disabled>
+                        <img src="iconos/enviar.png" alt="Enviar">
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- ═══════ PIE DE PÁGINA: RADIO ═══════ -->
+        <footer class="radio-footer">
+            <!-- Barra compacta -->
+            <div class="radio-bar">
+                <button class="radio-toggle-btn" id="radio-toggle-btn" title="Expandir radio">
+                    <img src="iconos/cassette.png" alt="Radio" style="height: 24px; vertical-align: middle;">
+                </button>
+
+                <div class="radio-now-info" style="display: flex; align-items: center;">
+                    <img id="radio-track-thumb" src="" alt="" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover; margin-right: 10px; display: none;">
+                    <div>
+                        <div class="radio-now-title" id="radio-track-title">PulseWave Radio</div>
+                        <div class="radio-now-artist" id="radio-track-artist">Presiona Play para escuchar</div>
+                    </div>
+                </div>
+
+                <!-- Retro visualizer -->
+                <div class="radio-visualizer">
+                    <div class="vis-bar"><div class="vis-fill"></div></div>
+                    <div class="vis-bar"><div class="vis-fill"></div></div>
+                    <div class="vis-bar"><div class="vis-fill"></div></div>
+                    <div class="vis-bar"><div class="vis-fill"></div></div>
+                    <div class="vis-bar"><div class="vis-fill"></div></div>
+                </div>
+
+                <div class="radio-controls">
+                    <button class="radio-ctrl-btn btn-play-mini" id="radio-btn-play" title="Play/Pausa">
+                        <span id="radio-play-icon"><img src="iconos/play.ico" alt="Play"></span>
+                    </button>
+                </div>
+
+                <div class="radio-progress-mini">
+                    <span class="radio-time-mini" id="radio-current-time">0:00</span>
+                    <div class="radio-progress-bar-mini" id="radio-progress-bar">
+                        <div class="radio-progress-fill-mini" id="radio-progress-fill"></div>
+                    </div>
+                    <span class="radio-time-mini" id="radio-total-time">0:00</span>
+                </div>
+
+                <div class="radio-volume-mini">
+                    <button class="radio-vol-btn" id="radio-btn-mute">
+                        <img src="iconos/volumen.png" alt="Vol" id="radio-vol-img">
+                    </button>
+                    <div class="radio-vol-bar" id="radio-volume-bar">
+                        <div class="radio-vol-fill" id="radio-volume-fill" style="width:75%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel expandido -->
+            <div class="radio-panel" id="radio-panel">
+                <div class="radio-panel-inner">
+                    <div id="youtube-player" style="display:none; width:1px; height:1px;"></div>
+                    <div class="radio-visualizer-wrap">
+                        <canvas id="radio-visualizer"></canvas>
+                    </div>
+                    <div class="radio-playlist-wrap">
+                        <div class="radio-playlist-header">
+                            <span>YOUTUBE RADIO</span>
+                        </div>
+                        <div class="radio-search-bar">
+                            <input type="text" id="radio-search-input" placeholder="Buscar canción o pegar link de YouTube..." autocomplete="off">
+                            <button id="radio-search-btn">Buscar</button>
+                        </div>
+                        <div id="radio-search-results" class="radio-search-results" style="display:none"></div>
+                        
+                        <div class="radio-playlist-header" style="margin-top:12px;">
+                            <span>COLA DE REPRODUCCIÓN</span>
+                            <span id="radio-track-count">0 tracks</span>
+                        </div>
+                        <div id="radio-playlist"></div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="radio_visualizer.js"></script>
+    <script src="radio_player.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
